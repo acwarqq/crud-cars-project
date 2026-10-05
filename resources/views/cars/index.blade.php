@@ -11,6 +11,7 @@
             <th>Body type</th><th>Price, USD</th><th>Available</th><th></th>
         </tr>
         @forelse ($cars as $car)
+        <!-- stas zhir ti -->
             <tr>
                 <td>{{ $car->brand }}</td>
                 <td>{{ $car->model }}</td>
