@@ -9,17 +9,17 @@ use Illuminate\Http\Request;
 class CarController extends Controller
 {
     public function index(Request $request)
-{
-    $brands = Car::select('brand')->distinct()->orderBy('brand')->pluck('brand');
+    {
+        $brands = Car::select('brand')->distinct()->orderBy('brand')->pluck('brand');
 
-    $cars = Car::with('bodyType')
-        ->when($request->filled('brand'), fn ($query) => $query->where('brand', $request->brand))
-        ->orderByDesc('id')
-        ->paginate(10)
-        ->withQueryString();
+        $cars = Car::with('bodyType')
+            ->when($request->filled('brand'), fn ($query) => $query->where('brand', $request->brand))
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
 
-    return view('cars.index', compact('cars', 'brands'));
-}
+        return view('cars.index', compact('cars', 'brands'));
+    }
 
     public function create()
     {
