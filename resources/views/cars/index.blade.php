@@ -3,15 +3,27 @@
 @section('title', 'Car list')
 
 @section('content')
-    <p><a href="{{ route('cars.create') }}">Add a car</a></p>
-
+    <p><a href="{{ route('cars.create') }}">Add a new record</a></p>
+    <form method="GET" action="{{ route('cars.index') }}" style="margin-bottom: 1rem">
+        <label>Brand
+            <select name="brand">
+                <option value="">All brands</option>
+                @foreach ($brands as $brand)
+                    <option value="{{ $brand }}" @selected(request('brand') === $brand)>{{ $brand }}</option>
+                @endforeach
+            </select>
+        </label>
+        <button type="submit">Filter</button>
+        @if (request('brand'))
+            <a href="{{ route('cars.index') }}">Reset</a>
+        @endif
+    </form>
     <table>
         <tr>
             <th>Brand</th><th>Model</th><th>Released</th>
             <th>Body type</th><th>Price, USD</th><th>Available</th><th></th>
         </tr>
         @forelse ($cars as $car)
-        <!-- stas zhir ti -->
             <tr>
                 <td>{{ $car->brand }}</td>
                 <td>{{ $car->model }}</td>
@@ -35,4 +47,6 @@
             <tr><td colspan="7">No records yet</td></tr>
         @endforelse
     </table>
+
+    {{ $cars->links() }}
 @endsection

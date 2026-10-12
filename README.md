@@ -1,59 +1,70 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CRUD-CARS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Идея проекта: База данных для сбора простейших данных об автомобилях, в основе функционала проекта входит простой принцип CRUD(create, read, update, delete).
 
-## About Laravel
+## Запуск
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+```
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan serve
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Затем открыть http://127.0.0.1:8000. База данных: SQLite (файл `database/database.sqlite`, настройка не нужна). На Windows вместо `cp` можно скопировать файл `.env.example` вручную и назвать `.env`.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Поля таблицы `cars`
 
-## Learning Laravel
+| Поле | Тип | Обязательное | Назначение |
+|---|---|---|---|
+| brand | string(50) | да | Марка |
+| model | string(50) | да | Модель |
+| release_year | unsignedSmallInteger | да | Год выпуска |
+| release_month | unsignedTinyInteger | да | Месяц выпуска (1-12) |
+| price | unsignedInteger | да | Цена при выпуске, USD |
+| engine_displacement | decimal(3,1) | нет (nullable) | Объём двигателя, л |
+| is_available | boolean | да (по умолчанию true) | Доступна ли для продажи |
+| body_type_id | внешний ключ | да | Тип кузова |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Таблица `body_types` (справочник): `id`, `name` (уникальное). Значения из сидера: Sedan, SUV, Hatchback, Coupe, Wagon.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Валидация
 
-## Laravel Sponsors
+Выполняется на сервере через `$request->validate()` при создании и обновлении.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Поле | Правила | Зачем |
+|---|---|---|
+| brand, model | required, string, max:50 | Не пустое и не длиннее столбца |
+| release_year | required, integer, между 1886 и текущим годом | Ограничивающее поле: первая машина появилась в 1886 году, будущее невозможно |
+| release_month | required, integer, 1-12 | Только настоящие месяцы |
+| price | required, integer, min:0 | Цена не может быть отрицательной |
+| engine_displacement | nullable, numeric, 0-99.9 | Необязательное, влезает в decimal(3,1) |
+| is_available | required, boolean | Да или нет |
+| body_type_id | required, exists:body_types,id | Нельзя подставить несуществующий тип кузова |
 
-### Premium Partners
+SQLite не проверяет `unsigned` и `decimal`, поэтому защита обеспечивается валидацией.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Маршруты
 
-## Contributing
+`Route::resource('cars', CarController::class)`, плюс `/` перенаправляет на список.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Метод | URI | Действие |
+|---|---|---|
+| GET | /cars | index (список, фильтр `?brand=`, пагинация) |
+| GET | /cars/create | create (форма) |
+| POST | /cars | store (сохранение) |
+| GET | /cars/{car} | show (карточка, 404 если нет) |
+| GET | /cars/{car}/edit | edit (форма) |
+| PUT/PATCH | /cars/{car} | update (обновление) |
+| DELETE | /cars/{car} | destroy (удаление) |
 
-## Code of Conduct
+## Выбранная связь
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Справочник `body_types` и связь `belongsTo` (у машины один тип кузова, у типа кузова много машин). Причина: значения хранятся в одном месте, их выбирают из списка, и опечаток нет. При удалении типа кузова с машинами база не даёт удалить (`restrictOnDelete`), чтобы не потерять данные.
 
-## Security Vulnerabilities
+## Сознательно не реализовано
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Авторизация, API, очереди, загрузка файлов, сторонние пакеты: их нет в задании, проект должен быть простым.
+- Tailwind и Vite: достаточно простого CSS в шаблоне.
+- Управление справочником типов кузова (CRUD): значения добавляются сидером.
