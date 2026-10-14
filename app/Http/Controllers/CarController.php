@@ -15,7 +15,7 @@ class CarController extends Controller
         $cars = Car::with('bodyType')
             ->when($request->filled('brand'), fn ($query) => $query->where('brand', $request->brand))
             ->orderByDesc('id')
-            ->paginate(10)
+            ->paginate(5)
             ->withQueryString();
 
         return view('cars.index', compact('cars', 'brands'));
